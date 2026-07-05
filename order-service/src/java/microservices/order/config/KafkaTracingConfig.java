@@ -1,4 +1,4 @@
-package com.saul.microservices.order.config;
+package microservices.order.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
