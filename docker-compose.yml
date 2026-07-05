@@ -1,43 +1,35 @@
 version: '3.8'
 
 services:
-  # Emulador de AWS (SQS)
-  localstack:
-    image: localstack/localstack:latest
+  # Microservicio de Pedidos
+  order-service:
+    image: saul-isus/order-service:latest
+    container_name: order-service
     ports:
-      - "4566:4566"
+      - "8081:8081"
     environment:
-      - SERVICES=sqs
-      - AWS_DEFAULT_REGION=us-east-1
+      - SPRING_PROFILES_ACTIVE=dev
+      # Conexión dinámica a la Base de Datos
+      - DB_ORDER_URL=jdbc:postgresql://postgres-db:5432/order_db
+      - DB_ORDER_USER=saul_admin
+      - DB_ORDER_PASSWORD=secret_pass
+      # Ruta dinámica para comunicarse con otros microservicios
+      - INVENTORY_SERVICE_URL=http://inventory-service:8082
+    depends_on:
+      - postgres-db
+
+  # Base de Datos PostgreSQL
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=order_db
+      - POSTGRES_USER=saul_admin
+      - POSTGRES_PASSWORD=secret_pass
     volumes:
-      - "./init-aws:/etc/localstack/init/ready.d" # Script para crear la cola automáticamente
+      - postgres_data:/var/lib/postgresql/data
 
-  # Base de datos para Order Service
-  orders-db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: orders_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432" # Puerto mapeado al 5433 local para evitar conflictos
-
-  # Base de datos para Inventory Service
-  inventory-db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: inventory_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5434:5432"
-
-  # Base de datos para Shipping Service
-  shipping-db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: shipping_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5435:5432"
+volumes:
+  postgres_data:
