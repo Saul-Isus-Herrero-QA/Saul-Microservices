@@ -1,0 +1,31 @@
+# Maven / Java build outputs
+**/target/
+**/build/
+**/out/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.*
+
+# Docker local data
+postgres-data/
+redis-data/
+
+# Temporary files
+*.tmp
+*.temp
