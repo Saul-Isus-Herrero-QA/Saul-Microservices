@@ -1,29 +1,22 @@
-server:
-  port: 8081
-
 spring:
   application:
     name: order-service
   
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:orders_db}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-
+    # Busca la URL de la nube; si no existe, levanta el PostgreSQL local de Docker
+    url: ${DB_ORDER_URL:jdbc:postgresql://localhost:5432/order_db}
+    username: ${DB_ORDER_USER:postgres}
+    password: ${DB_ORDER_PASSWORD:postgres}
+  
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
-# Configuración para conectar Spring Cloud AWS con LocalStack
-spring:
-  cloud:
-    aws:
-      region:
-        static: us-east-1
-      credentials:
-        access-key: test
-        secret-key: test
-      sqs:
-        endpoint: http://localhost:4566
+# Configuración de comunicación entre microservicios
+services:
+  inventory:
+    # Permite cambiar la ruta dinámicamente al desplegar en Kubernetes/Cloud
+    url: ${INVENTORY_SERVICE_URL:http://localhost:8082}
