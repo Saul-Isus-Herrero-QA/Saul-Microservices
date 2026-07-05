@@ -1,35 +1,51 @@
 version: '3.8'
 
 services:
-  # Microservicio de Pedidos
+  # Emulador de AWS SQS
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "./init-aws:/etc/localstack/init/ready.d"
+
+  # Base de Datos para Order Service
+  orders-db:
+    image: postgres:15-alpine
+    container_name: orders-db
+    environment:
+      POSTGRES_DB: orders_db
+      POSTGRES_USER: saul_admin
+      POSTGRES_PASSWORD: secret_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - orders_data:/var/lib/postgresql/data
+
+  # Microservicio de Órdenes
   order-service:
     image: saul-isus/order-service:latest
     container_name: order-service
     ports:
       - "8081:8081"
     environment:
-      - SPRING_PROFILES_ACTIVE=dev
-      # Conexión dinámica a la Base de Datos
-      - DB_ORDER_URL=jdbc:postgresql://postgres-db:5432/order_db
+      - DB_ORDER_URL=jdbc:postgresql://orders-db:5432/orders_db
       - DB_ORDER_USER=saul_admin
       - DB_ORDER_PASSWORD=secret_pass
-      # Ruta dinámica para comunicarse con otros microservicios
-      - INVENTORY_SERVICE_URL=http://inventory-service:8082
+      - AWS_SQS_ENDPOINT=http://localstack:4566
+    # Sonda de salud nativa en el contenedor
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     depends_on:
-      - postgres-db
-
-  # Base de Datos PostgreSQL
-  postgres-db:
-    image: postgres:15-alpine
-    container_name: postgres-db
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=order_db
-      - POSTGRES_USER=saul_admin
-      - POSTGRES_PASSWORD=secret_pass
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - orders-db
+      - localstack
 
 volumes:
-  postgres_data:
+  orders_data:
