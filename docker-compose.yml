@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Emulador de AWS (SQS)
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "./init-aws:/etc/localstack/init/ready.d" # Script para crear la cola automáticamente
+
+  # Base de datos para Order Service
+  orders-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: orders_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432" # Puerto mapeado al 5433 local para evitar conflictos
+
+  # Base de datos para Inventory Service
+  inventory-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+
+  # Base de datos para Shipping Service
+  shipping-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: shipping_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
